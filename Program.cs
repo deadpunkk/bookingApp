@@ -88,7 +88,7 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-await DbSeeder.SeedAdminAsync(app.Services);
+await DbSeeder.SeedAdminAsync(app.Services, app.Configuration);
 
 app.UseSwagger();
 app.UseSwaggerUI();
