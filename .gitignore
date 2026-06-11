@@ -1,1 +1,17 @@
+# Environment / secrets
 .env
+.env.*
+
+# SQLite local database
+*.db
+*.db-shm
+*.db-wal
+
+# Build output
+bin/
+obj/
+
+# Rider / user settings
+*.DotSettings.user
+*.user
+.idea/
