@@ -11,6 +11,7 @@ public static class ErrorCodeExtensions
             ErrorCode.ValidationError => Results.BadRequest(),
             ErrorCode.NotFound => Results.NotFound(),
             ErrorCode.Conflict => Results.Conflict(),
+            ErrorCode.Forbidden => Results.Forbid(),
             _ => Results.Problem()
         };
     }

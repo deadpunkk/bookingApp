@@ -1,3 +1,4 @@
+using BookingApi.Common;
 using BookingApi.Dto;
 using BookingApi.Extensions;
 using BookingApi.Services;
@@ -29,13 +30,25 @@ public static class UserEndpoints
             return result.IsSuccess ? Results.Created($"/users/{result.Value!.Id}", result.Value.ToDto()) 
                                     : result.Error.ToHttpResult();
         });
-        group.MapPost("/login", async (IUserService service, LoginDto dto) =>
+        group.MapPost("/login", async (
+            IUserService service,
+            IJwtService jwtService,
+            LoginDto dto) =>
         {
             var result = await service.LoginAsync(dto);
 
-            return result.IsSuccess
-                ? Results.Ok(result.Value!.ToDto())
-                : result.Error.ToHttpResult();
+            if (!result.IsSuccess)
+            {
+                return result.Error.ToHttpResult();
+            }
+            
+            var token = jwtService.GenerateToken(result.Value!);
+
+            var response = new LoginResponseDto(
+                token,
+                result.Value!.ToDto());
+            
+            return Results.Ok(response);
         });
     }
 }

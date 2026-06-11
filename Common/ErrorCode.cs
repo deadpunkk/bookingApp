@@ -5,5 +5,6 @@ public enum ErrorCode
     None,
     ValidationError,
     Conflict, 
-    NotFound
+    NotFound,
+    Forbidden
 }

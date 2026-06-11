@@ -9,7 +9,16 @@ public class AppDbContext : DbContext
         : base(options)
     {
     }
-
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Booking>()
+            .HasOne(b => b.CreatedByUser)
+            .WithMany(u => u.Bookings)
+            .HasForeignKey(b => b.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+    
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<User> Users => Set<User>();
 }

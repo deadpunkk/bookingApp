@@ -8,6 +8,7 @@ public class User
     public string Login { get; set; }  = string.Empty;
     public string PasswordHash { get; set; }  = string.Empty;
     public Roles Role { get; set; }
+    public List<Booking> Bookings { get; set; } = new();
     
     public User(string login, string passwordHash, Roles role)
     {

@@ -1,3 +1,6 @@
 namespace BookingApi.Dto;
 
-public record LoginResponceDto();
+public record LoginResponseDto(
+    string AccessToken,
+    UserDto User
+);

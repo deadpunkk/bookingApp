@@ -57,7 +57,7 @@ public class BookingService : IBookingService
         return Result<Booking>.Success(booking);
     }
 
-    public async Task<Result<Booking>> CreateAsync(CreateBookingDto dto)
+    public async Task<Result<Booking>> CreateAsync(CreateBookingDto dto, int userId)
     {
         _logger.LogInformation("Creating booking..");
         
@@ -92,7 +92,7 @@ public class BookingService : IBookingService
             dto.StartDate,
             dto.EndDate);
         
-        var booking = new Booking(dto.Title, dto.StartDate, dto.EndDate);
+        var booking = new Booking(dto.Title, dto.StartDate, dto.EndDate, userId);
         
         _db.Bookings.Add(booking);
         await _db.SaveChangesAsync();
@@ -103,7 +103,7 @@ public class BookingService : IBookingService
         
         return Result<Booking>.Success(booking);
     }
-    public async Task<Result<Booking>> UpdateAsync(int id, UpdateBookingDto dto)
+    public async Task<Result<Booking>> UpdateAsync(int id, UpdateBookingDto dto, int currentUserId, string userRole)
     {
         _logger.LogInformation("Updating booking with ID {BookingId}", id);
         
@@ -125,6 +125,13 @@ public class BookingService : IBookingService
             
             return Result<Booking>.Failure(ErrorCode.NotFound);
         }
+
+        if (userRole == Roles.Moderator.ToString()
+            && currentUserId != booking.CreatedByUserId)
+        {
+            return Result<Booking>.Failure(ErrorCode.Forbidden);
+        }
+        
         
         var hasConflict = await _db.Bookings.AnyAsync(existing =>
             existing.Id != id
@@ -151,8 +158,9 @@ public class BookingService : IBookingService
         return Result<Booking>.Success(booking);
     }
 
-    public async Task<Result<bool>> DeleteAsync(int id)
+    public async Task<Result<bool>> DeleteAsync(int id, int currentUserId, string userRole)
     {
+        
         _logger.LogInformation("Deleting booking with ID {BookingId}", id);
         var booking = await _db.Bookings.FirstOrDefaultAsync(item => item.Id == id);
         if (booking == null)
@@ -161,11 +169,26 @@ public class BookingService : IBookingService
             return Result<bool>.Failure(ErrorCode.NotFound);
         }
         
+        if (userRole == Roles.Moderator.ToString()
+            && currentUserId != booking.CreatedByUserId)
+        {
+            return Result<bool>.Failure(ErrorCode.Forbidden);
+        }
+        
         _db.Bookings.Remove(booking);
         await _db.SaveChangesAsync();
 
         _logger.LogInformation("Booking deleted successfully");
         return Result<bool>.Success(true);
+    }
+
+    public async Task<Result<IReadOnlyList<Booking>>> GetMyAsync(int userId)
+    {
+        var bookings = await _db.Bookings
+            .Where(b => b.CreatedByUserId == userId)
+            .ToListAsync();
+
+        return Result<IReadOnlyList<Booking>>.Success(bookings);
     }
     
 }
