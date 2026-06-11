@@ -16,20 +16,21 @@ public static class UserEndpoints
         {
             var result = await service.GetAllAsync();
             return Results.Ok(result.Value!.ToDtoList());
-        });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         group.MapGet("/{id}", async (int id, IUserService service) =>
         {
             var result = await service.GetByIdAsync(id);
             return result.IsSuccess ? Results.Ok(result.Value!.ToDto()) : result.Error.ToHttpResult();   
-        });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         group.MapPost("/", async (IUserService service, CreateUserDto dto) =>
         {
             var result = await service.CreateAsync(dto);
             return result.IsSuccess ? Results.Created($"/users/{result.Value!.Id}", result.Value.ToDto()) 
                                     : result.Error.ToHttpResult();
-        });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        
         group.MapPost("/login", async (
             IUserService service,
             IJwtService jwtService,
@@ -49,6 +50,6 @@ public static class UserEndpoints
                 result.Value!.ToDto());
             
             return Results.Ok(response);
-        });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
     }
 }
