@@ -90,13 +90,23 @@ app.UseExceptionHandler(errorApp =>
 
 await DbSeeder.SeedAdminAsync(app.Services, app.Configuration);
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapBookingEndpoints();
 app.MapUsersEndpoints();
+
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "Healthy",
+    service = "BookingApi",
+    time = DateTime.UtcNow
+}));
 
 app.Run();
