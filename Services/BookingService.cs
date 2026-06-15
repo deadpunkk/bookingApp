@@ -36,12 +36,43 @@ public class BookingService : IBookingService
     }
     
     //work with db, validation and Result<T> class => endpoint isolation logic 
-    public async Task<Result<IReadOnlyList<Booking>>> GetAllAsync()
+    public async Task<Result<PagedResult<Booking>>> GetAllAsync(int page, int pageSize)
     {
-        _logger.LogInformation("Getting all bookings");
-        var bookings = await _db.Bookings.ToListAsync();
-        _logger.LogInformation("Returning all bookings");
-        return Result<IReadOnlyList<Booking>>.Success(bookings);
+        _logger.LogInformation("Getting bookings. Page: {Page}, PageSize: {PageSize}",
+           page,
+           pageSize);
+
+        if (page < 1 || pageSize < 1 || pageSize > 100)
+        {
+            _logger.LogWarning(
+                "Getting bookings failed. Invalid pagination parameters. Page: {Page}, PageSize: {PageSize}",
+                page,
+                pageSize);
+
+            return Result<PagedResult<Booking>>.Failure(ErrorCode.ValidationError);
+        }
+        
+        var totalCount = await _db.Bookings.CountAsync();
+        
+        var bookings = await _db.Bookings
+            .OrderBy(b => b.StartDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        
+        var result = new PagedResult<Booking>(
+            bookings,
+            page,
+            pageSize,
+            totalCount);
+        
+        _logger.LogInformation(
+            "Returning bookings. Page: {Page}, PageSize: {PageSize}, TotalCount: {TotalCount}",
+            page,
+            pageSize,
+            totalCount);
+
+        return Result<PagedResult<Booking>>.Success(result);
     }
     
     public async Task<Result<Booking>> GetByIdAsync(int id)

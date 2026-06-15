@@ -12,10 +12,27 @@ public static class BookingEndpoints
         var group = app.MapGroup("/bookings")
             .WithTags("Bookings");
         
-        group.MapGet("/", async (IBookingService bookingService) =>
+        group.MapGet("/", async (
+            IBookingService bookingService,
+            int page = 1,
+            int pageSize = 10) =>
         {
-            var result = await bookingService.GetAllAsync();
-            return Results.Ok(result.Value!.ToDtoList());
+            var result = await bookingService.GetAllAsync(page, pageSize);
+
+            if (!result.IsSuccess)
+            {
+                return result.Error.ToHttpResult();
+            }
+
+            var pagedBookings = result.Value!;
+
+            var response = new PagedResult<BookingDto>(
+                pagedBookings.Items.ToDtoList(),
+                pagedBookings.Page,
+                pagedBookings.PageSize,
+                pagedBookings.TotalCount);
+
+            return Results.Ok(response);
         }).RequireAuthorization();
         
         group.MapGet("/my", async (

@@ -30,7 +30,7 @@ public static class UserEndpoints
             return result.IsSuccess ? Results.Created($"/users/{result.Value!.Id}", result.Value.ToDto()) 
                                     : result.Error.ToHttpResult();
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
-        
+
         group.MapPost("/login", async (
             IUserService service,
             IJwtService jwtService,
@@ -42,14 +42,14 @@ public static class UserEndpoints
             {
                 return result.Error.ToHttpResult();
             }
-            
+
             var token = jwtService.GenerateToken(result.Value!);
 
             var response = new LoginResponseDto(
                 token,
                 result.Value!.ToDto());
-            
+
             return Results.Ok(response);
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        });
     }
 }
