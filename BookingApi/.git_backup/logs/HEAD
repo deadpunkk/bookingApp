@@ -1,0 +1,15 @@
+0000000000000000000000000000000000000000 892d4cae13447443972d1c27943402886acf2931 ruslan <davydovruslan02@gmail.com> 1780583365 +0300	commit (initial): Enpoints, service, Buissness logic, JWT basics
+892d4cae13447443972d1c27943402886acf2931 a1ab5540e791fa77c35cd7b5f9457afbd6fa5a2f ruslan <davydovruslan02@gmail.com> 1781097410 +0300	commit: core is done
+a1ab5540e791fa77c35cd7b5f9457afbd6fa5a2f 0000000000000000000000000000000000000000 ruslan <davydovruslan02@gmail.com> 1781097434 +0300	Branch: renamed refs/heads/main to refs/heads/main
+a1ab5540e791fa77c35cd7b5f9457afbd6fa5a2f a1ab5540e791fa77c35cd7b5f9457afbd6fa5a2f ruslan <davydovruslan02@gmail.com> 1781097434 +0300	Branch: renamed refs/heads/main to refs/heads/main
+a1ab5540e791fa77c35cd7b5f9457afbd6fa5a2f aa73f235815025659d3fe748fb011397344fcebd ruslan <davydovruslan02@gmail.com> 1781100655 +0300	commit: prepare for docker
+aa73f235815025659d3fe748fb011397344fcebd d29a7c2367c60954536c9b474c9ce29ebb0d5e83 ruslan <davydovruslan02@gmail.com> 1781172629 +0300	commit: predeploy
+d29a7c2367c60954536c9b474c9ce29ebb0d5e83 17a37505c0df423a94ce25f2732693e3dc84b670 ruslan <davydovruslan02@gmail.com> 1781172643 +0300	commit: predeploy
+17a37505c0df423a94ce25f2732693e3dc84b670 2346e349918b38b402e2d5150248672985358c24 ruslan <davydovruslan02@gmail.com> 1781173003 +0300	commit: Clean repository and apply gitignore
+2346e349918b38b402e2d5150248672985358c24 a3968bd52699c5fdf21a9dd8536398e9608b481e ruslan <davydovruslan02@gmail.com> 1781173149 +0300	commit: Remove generated and local database files
+a3968bd52699c5fdf21a9dd8536398e9608b481e d1da0151d8d2988eac51861dd864449cf9be39bb ruslan <davydovruslan02@gmail.com> 1781173886 +0300	commit: close user enpoints
+d1da0151d8d2988eac51861dd864449cf9be39bb 4467acf107c72ee69661768db90c9402c63c17c0 ruslan <davydovruslan02@gmail.com> 1781177531 +0300	commit: predeploy
+4467acf107c72ee69661768db90c9402c63c17c0 27b01508f5fff77fd16503b9d156808b10ca5304 ruslan <davydovruslan02@gmail.com> 1781508561 +0300	commit: Add health endpoint and add Swagger DevEnv
+27b01508f5fff77fd16503b9d156808b10ca5304 d22d9501ca49c5d675839cf5897412152754f735 ruslan <davydovruslan02@gmail.com> 1781508604 +0300	commit: Add health endpoint and add Swagger DevEnv
+d22d9501ca49c5d675839cf5897412152754f735 57a6659b97ce0733ae04eca5dbf317893faec671 ruslan <davydovruslan02@gmail.com> 1781523211 +0300	commit: Add pagination for GET Endpoint
+57a6659b97ce0733ae04eca5dbf317893faec671 57a6659b97ce0733ae04eca5dbf317893faec671 ruslan <davydovruslan02@gmail.com> 1781525950 +0300	checkout: moving from main to feature/unit-tests
