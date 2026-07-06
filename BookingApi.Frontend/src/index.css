@@ -77,3 +77,68 @@ select {
 .page h1 {
   margin-top: 0;
 }
+
+.app-auth {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-user {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.link-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 360px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field span {
+  font-weight: 600;
+}
+
+.form-field input {
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.form button[type="submit"] {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #1f2933;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.form button[type="submit"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-error {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #991b1b;
+}
