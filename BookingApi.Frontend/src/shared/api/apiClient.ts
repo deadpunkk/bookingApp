@@ -1,75 +1,74 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080')
+  .replace(/\/$/, '');
 
-export class ApiError extends Error{
-    constructor(
-        message: string,
-        status: number
-    ){
-        super(message);
-        this.name = "ApiError";
-    }
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
 }
 
 type ApiClientOptions = RequestInit & {
-    accessToken?: string;
+  accessToken?: string;
 };
 
-export async function ApiClient<TResponse>(
-    path: string,
-    options: ApiClientOptions = {},
-    ) : Promise<TResponse>{
+export async function apiClient<TResponse>(
+  path: string,
+  options: ApiClientOptions = {},
+): Promise<TResponse> {
+  const { accessToken, headers, body, ...fetchOptions } = options;
+  const requestHeaders = new Headers(headers);
 
-        const {accessToken, headers, body, ...fetchOptions} = options;
+  if (body !== undefined && body !== null && !requestHeaders.has('Content-Type')) {
+    requestHeaders.set('Content-Type', 'application/json');
+  }
 
-        const requestHeaders = new Headers(headers);
+  if (accessToken) {
+    requestHeaders.set('Authorization', `Bearer ${accessToken}`);
+  }
 
-        if (body && !requestHeaders.has('Content-Type')){
-            requestHeaders.set('Content-Type', 'application/json');
-        }
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...fetchOptions,
+    body,
+    headers: requestHeaders,
+  });
 
-        if (accessToken){
-            requestHeaders.set('Authorization', `Bearer ${accessToken}`);
-        }
+  if (!response.ok) {
+    throw new ApiError(await readErrorMessage(response), response.status);
+  }
 
-        const response = await fetch(`${API_BASE_URL}${path}`, {
-            ...fetchOptions,
-            body,
-            headers: requestHeaders
-        });
+  if (response.status === 204) {
+    return undefined as TResponse;
+  }
 
-        if (!response.ok){
-            const message = await readErrorMessage(response);
-            throw new ApiError(message, response.status);
-        }
+  return response.json() as Promise<TResponse>;
+}
 
-        if (response.status === 204){
-            return undefined as TResponse;
-        }
+async function readErrorMessage(response: Response): Promise<string> {
+  const responseText = await response.text().catch(() => '');
 
-        return await response.json() as TResponse;
+  if (!responseText) {
+    return `HTTP error ${response.status}`;
+  }
+
+  try {
+    const body = JSON.parse(responseText) as {
+      error?: unknown;
+      message?: unknown;
+      title?: unknown;
+    };
+
+    for (const value of [body.message, body.error, body.title]) {
+      if (typeof value === 'string' && value.trim()) {
+        return value;
+      }
     }
-    
-    async function readErrorMessage(response: Response) : Promise<string>{
-        const contentType = response.headers.get('content-type');
+  } catch {
+    return responseText;
+  }
 
-        if (contentType?.includes('application/json')){
-            const body = await response.json().catch(() => null) as {
-                error?: string;
-                message?: string;
-                title?: string;
-            } | null;
-
-            return body?.message
-            ?? body?.error
-            ?? body?.title
-            ?? `HTTP error ${response.status}`;
-        }
-     
-        const text = await response.text().catch(() => '');
-
-        return text || `HTTP error ${response.status}`;
-    }
-
- 
-    
-
+  return `HTTP error ${response.status}`;
+}

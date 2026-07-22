@@ -14,31 +14,41 @@ type AuthProviderProps = {
   children: ReactNode;
 };
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [token, setToken] = useState<string | null>(() => getStoredToken());
-  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
+type AuthState = {
+  token: string | null;
+  user: AuthUser | null;
+};
 
-  const isAuthenticated = token !== null && user !== null;
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [auth, setAuth] = useState<AuthState>(() => {
+    const token = getStoredToken();
+    const user = getStoredUser();
+
+    if (!token || !user) {
+      clearAuthStorage();
+      return { token: null, user: null };
+    }
+
+    return { token, user };
+  });
+
+  const isAuthenticated = auth.token !== null && auth.user !== null;
 
   async function login(request: LoginRequest): Promise<void> {
     const result = await loginRequest(request);
 
-    setToken(result.token);
-    setUser(result.user);
-
     saveAuth(result.token, result.user);
+    setAuth(result);
   }
 
   function logout(): void {
-    setToken(null);
-    setUser(null);
-
     clearAuthStorage();
+    setAuth({ token: null, user: null });
   }
 
   const value = {
-    token,
-    user,
+    token: auth.token,
+    user: auth.user,
     isAuthenticated,
     login,
     logout,

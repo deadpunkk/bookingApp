@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import { ApiError } from '../../shared/api/apiClient';
-import { getBookings } from '../../features/auth/bookingsApi';
-import type { Booking, PagedResult } from '../../features/auth/bookingTypes';
+import { BookingTable } from '../../features/bookings/BookingTable';
+import type { Booking, PagedResult } from '../../features/bookings/bookingTypes';
+import { deleteBooking, getBookings } from '../../features/bookings/bookingsApi';
 import { useAuth } from '../../features/auth/useAuth';
+import { getApiErrorMessage } from '../../shared/api/getApiErrorMessage';
 
 const PAGE_SIZE = 10;
 
@@ -12,45 +13,74 @@ export function BookingsPage() {
 
   const [bookingsResult, setBookingsResult] = useState<PagedResult<Booking> | null>(null);
   const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const totalPages = bookingsResult
-    ? Math.max(1, Math.ceil(bookingsResult.totalCount / bookingsResult.pageSize))
+    ? Math.max(1, Math.ceil(bookingsResult.totalCount / (bookingsResult.pageSize || PAGE_SIZE)))
     : 1;
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
-      setBookingsResult(null);
-      setError('Для просмотра бронирований нужно войти.');
+    const accessToken = token;
+    if (!isAuthenticated || !accessToken) {
       return;
     }
 
-    async function loadBookings() {
+    const controller = new AbortController();
+
+    async function loadBookings(validToken: string) {
       setIsLoading(true);
       setError(null);
 
       try {
         const result = await getBookings({
-          accessToken: token,
+          accessToken: validToken,
           page,
           pageSize: PAGE_SIZE,
+          signal: controller.signal,
         });
 
         setBookingsResult(result);
-      } catch (error) {
-        const message = error instanceof ApiError
-          ? getApiErrorMessage(error)
-          : 'Не удалось загрузить бронирования';
-
-        setError(message);
+      } catch (requestError) {
+        if (!controller.signal.aborted) {
+          setError(getApiErrorMessage(requestError, 'Не удалось загрузить бронирования.'));
+        }
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     }
 
-    void loadBookings();
-  }, [isAuthenticated, token, page]);
+    void loadBookings(accessToken);
+
+    return () => controller.abort();
+  }, [isAuthenticated, token, page, refreshKey]);
+
+  async function handleDelete(booking: Booking) {
+    if (!token || !window.confirm(`Удалить бронь «${booking.title}»?`)) {
+      return;
+    }
+
+    setDeletingId(booking.id);
+    setError(null);
+
+    try {
+      await deleteBooking(booking.id, token);
+
+      if (bookingsResult?.items.length === 1 && page > 1) {
+        setPage((currentPage) => currentPage - 1);
+      } else {
+        setRefreshKey((current) => current + 1);
+      }
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'Не удалось удалить бронирование.'));
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <section className="page">
@@ -61,43 +91,30 @@ export function BookingsPage() {
         </div>
       </div>
 
-      {isLoading && <p>Загрузка...</p>}
+      {isLoading && <div className="status-message">Загрузка бронирований...</div>}
 
       {error && (
-        <div className="form-error">
+        <div className="form-error" role="alert">
           {error}
         </div>
       )}
 
-      {!isLoading && !error && bookingsResult && (
+      {!isLoading && bookingsResult && (
         <>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Название</th>
-                <th>Начало</th>
-                <th>Конец</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {bookingsResult.items.map((booking) => (
-                <tr key={booking.id}>
-                  <td>{booking.id}</td>
-                  <td>{booking.title}</td>
-                  <td>{formatDateTime(booking.startDate)}</td>
-                  <td>{formatDateTime(booking.endDate)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {bookingsResult.items.length === 0 && (
-            <p>Бронирований пока нет.</p>
+          {bookingsResult.items.length > 0 ? (
+            <BookingTable
+              bookings={bookingsResult.items}
+              deletingId={deletingId}
+              onDelete={(booking) => void handleDelete(booking)}
+            />
+          ) : (
+            <div className="empty-state">Бронирований пока нет.</div>
           )}
 
-          <div className="pagination">
+          <div className="pagination" aria-label="Пагинация">
+            <span className="pagination-total">
+              Всего: {bookingsResult.totalCount}
+            </span>
             <button
               type="button"
               disabled={page === 1}
@@ -105,11 +122,9 @@ export function BookingsPage() {
             >
               Назад
             </button>
-
             <span>
-              Страница {page} из {totalPages}
+              Страница {bookingsResult.page} из {totalPages}
             </span>
-
             <button
               type="button"
               disabled={page >= totalPages}
@@ -122,23 +137,4 @@ export function BookingsPage() {
       )}
     </section>
   );
-}
-
-function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat('ru-RU', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(new Date(value));
-}
-
-function getApiErrorMessage(error: ApiError): string {
-  if (error.status === 401) {
-    return 'Сессия истекла или токен недействителен. Войдите снова.';
-  }
-
-  if (error.status === 403) {
-    return 'Недостаточно прав для выполнения действия.';
-  }
-
-  return error.message;
 }

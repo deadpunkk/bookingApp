@@ -1,73 +1,66 @@
-# React + TypeScript + Vite
+# BookingApi Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React-клиент для BookingApi. Проект использует React, TypeScript, Vite, React Router,
+Context API и обычный CSS. Redux и UI-фреймворки не используются.
 
-Currently, two official plugins are available:
+## Запуск
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Требуется актуальная LTS-версия Node.js и запущенный BookingApi.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Dev server Vite по умолчанию доступен на `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Переменные окружения
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_BASE_URL=http://localhost:8080
 ```
+
+Если переменная не задана, frontend использует `http://localhost:8080`.
+Файл `.env.local` игнорируется Git, а `.env.example` можно хранить в репозитории.
+
+## Страницы
+
+- `/login` — вход пользователя.
+- `/bookings` — все бронирования с серверной пагинацией.
+- `/my-bookings` — бронирования текущего пользователя.
+- `/bookings/create` — создание брони для Admin и Moderator.
+- `/bookings/:id/edit` — редактирование брони для Admin и Moderator.
+
+Защищённые страницы перенаправляют гостя на `/login`, а после успешного входа
+возвращают его на исходный URL. Viewer не получает доступ к маршрутам создания и
+редактирования и не видит управляющие кнопки.
+
+## Backend и авторизация
+
+Вход выполняется через `POST /users/login`. Полученный `accessToken` сохраняется в
+`localStorage`, а числовая роль (`0`, `1`, `2`) нормализуется в `Admin`, `Moderator`
+или `Viewer`. Защищённые запросы отправляют заголовок
+`Authorization: Bearer <accessToken>`.
+
+Общий HTTP-клиент и обработка ошибок находятся в `src/shared/api`. Auth API и
+состояние авторизации находятся в `src/features/auth`, а все запросы бронирований —
+в `src/features/bookings/bookingsApi.ts`.
+
+Frontend использует endpoints:
+
+- `GET /bookings?page=1&pageSize=10`
+- `GET /bookings/my`
+- `GET /bookings/{id}`
+- `POST /bookings`
+- `PUT /bookings/{id}`
+- `DELETE /bookings/{id}`
+
+## Проверка
+
+```bash
+npm run lint
+npm run build
+```
+
+Production build создаётся в каталоге `dist`.

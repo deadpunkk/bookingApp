@@ -1,4 +1,4 @@
-import { ApiClient } from '../../shared/api/apiClient';
+import { apiClient } from '../../shared/api/apiClient';
 
 import type {
   Booking,
@@ -7,13 +7,11 @@ import type {
   UpdateBookingRequest,
 } from './bookingTypes';
 
-type AuthorizedRequest = {
+type GetBookingsParams = {
   accessToken: string;
-};
-
-type GetBookingsParams = AuthorizedRequest & {
   page: number;
   pageSize: number;
+  signal?: AbortSignal;
 };
 
 export function getBookings(params: GetBookingsParams): Promise<PagedResult<Booking>> {
@@ -22,28 +20,29 @@ export function getBookings(params: GetBookingsParams): Promise<PagedResult<Book
     pageSize: String(params.pageSize),
   });
 
-  return ApiClient<PagedResult<Booking>>(`/bookings?${searchParams.toString()}`, {
+  return apiClient<PagedResult<Booking>>(`/bookings?${searchParams.toString()}`, {
     accessToken: params.accessToken,
+    signal: params.signal,
   });
 }
 
-export function getMyBookings(accessToken: string): Promise<Booking[]> {
-  return ApiClient<Booking[]>('/bookings/my', {
-    accessToken,
-  });
+export function getMyBookings(accessToken: string, signal?: AbortSignal): Promise<Booking[]> {
+  return apiClient<Booking[]>('/bookings/my', { accessToken, signal });
 }
 
-export function getBookingById(id: number, accessToken: string): Promise<Booking> {
-  return ApiClient<Booking>(`/bookings/${id}`, {
-    accessToken,
-  });
+export function getBookingById(
+  id: number,
+  accessToken: string,
+  signal?: AbortSignal,
+): Promise<Booking> {
+  return apiClient<Booking>(`/bookings/${id}`, { accessToken, signal });
 }
 
 export function createBooking(
   request: CreateBookingRequest,
   accessToken: string,
 ): Promise<Booking> {
-  return ApiClient<Booking>('/bookings', {
+  return apiClient<Booking>('/bookings', {
     method: 'POST',
     accessToken,
     body: JSON.stringify(request),
@@ -55,7 +54,7 @@ export function updateBooking(
   request: UpdateBookingRequest,
   accessToken: string,
 ): Promise<void> {
-  return ApiClient<void>(`/bookings/${id}`, {
+  return apiClient<void>(`/bookings/${id}`, {
     method: 'PUT',
     accessToken,
     body: JSON.stringify(request),
@@ -63,7 +62,7 @@ export function updateBooking(
 }
 
 export function deleteBooking(id: number, accessToken: string): Promise<void> {
-  return ApiClient<void>(`/bookings/${id}`, {
+  return apiClient<void>(`/bookings/${id}`, {
     method: 'DELETE',
     accessToken,
   });

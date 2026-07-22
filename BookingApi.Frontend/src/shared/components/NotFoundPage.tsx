@@ -5,7 +5,7 @@ export function NotFoundPage() {
     <section className="page">
       <h1>Страница не найдена</h1>
       <p>Такого маршрута в приложении нет.</p>
-      <Link to="/bookings">Вернуться к бронированиям</Link>
+      <Link className="back-link" to="/bookings">Вернуться к бронированиям</Link>
     </section>
   );
 }

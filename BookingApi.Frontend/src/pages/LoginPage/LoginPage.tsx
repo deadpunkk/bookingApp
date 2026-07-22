@@ -1,7 +1,16 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Navigate, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../../features/auth/useAuth';
+import { getApiErrorMessage } from '../../shared/api/getApiErrorMessage';
+
+type LoginLocationState = {
+  from?: {
+    pathname: string;
+    search: string;
+    hash: string;
+  };
+};
 
 export function LoginPage() {
   const [loginValue, setLoginValue] = useState('');
@@ -9,8 +18,14 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login: signIn } = useAuth();
+  const { isAuthenticated, login: signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectLocation = (location.state as LoginLocationState | null)?.from;
+  const redirectTo = redirectLocation
+    ? `${redirectLocation.pathname}${redirectLocation.search}${redirectLocation.hash}`
+    : '/bookings';
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,21 +39,26 @@ export function LoginPage() {
         password,
       });
 
-      navigate('/bookings', { replace: true });
-    } catch (error) {
-      const message = error instanceof Error
-        ? error.message
-        : 'Не удалось выполнить вход';
-
-      setError(message);
+      navigate(redirectTo, { replace: true });
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'Не удалось выполнить вход.'));
     } finally {
       setIsLoading(false);
     }
   }
 
+  if (isAuthenticated) {
+    return <Navigate to="/bookings" replace />;
+  }
+
   return (
-    <section className="page">
-      <h1>Вход</h1>
+    <section className="page login-page">
+      <div className="page-header">
+        <div>
+          <h1>Вход</h1>
+          <p>Войдите, чтобы управлять бронированиями.</p>
+        </div>
+      </div>
 
       <form className="form" onSubmit={handleSubmit}>
         <label className="form-field">
@@ -48,6 +68,8 @@ export function LoginPage() {
             value={loginValue}
             onChange={(event) => setLoginValue(event.target.value)}
             autoComplete="username"
+            required
+            autoFocus
           />
         </label>
 
@@ -58,11 +80,12 @@ export function LoginPage() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="current-password"
+            required
           />
         </label>
 
         {error && (
-          <div className="form-error">
+          <div className="form-error" role="alert">
             {error}
           </div>
         )}

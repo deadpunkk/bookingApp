@@ -12,14 +12,11 @@ export type PagedResult<TItem> = {
   totalCount: number;
 };
 
-export type CreateBookingRequest = {
+export type BookingRequest = {
   title: string;
   startDate: string;
   endDate: string;
 };
 
-export type UpdateBookingRequest = {
-  title: string;
-  startDate: string;
-  endDate: string;
-};
+export type CreateBookingRequest = BookingRequest;
+export type UpdateBookingRequest = BookingRequest;

@@ -1,6 +1,7 @@
-import { Link, Outlet } from 'react-router';
+import { Link, NavLink, Outlet } from 'react-router';
 
 import { useAuth } from '../../features/auth/useAuth';
+import { RoleGuard } from './RoleGuard';
 
 export function Layout() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -8,19 +9,25 @@ export function Layout() {
   return (
     <div className="app">
       <header className="app-header">
-        <div className="app-logo">BookingApi</div>
+        <Link className="app-logo" to={isAuthenticated ? '/bookings' : '/login'}>
+          BookingApi
+        </Link>
 
-        <nav className="app-nav">
-          <Link to="/bookings">Все бронирования</Link>
-          <Link to="/my-bookings">Мои бронирования</Link>
-          <Link to="/bookings/create">Создать бронь</Link>
-        </nav>
+        {isAuthenticated && (
+          <nav className="app-nav" aria-label="Основная навигация">
+            <NavLink to="/bookings" end>Все бронирования</NavLink>
+            <NavLink to="/my-bookings">Мои бронирования</NavLink>
+            <RoleGuard allowedRoles={['Admin', 'Moderator']}>
+              <NavLink to="/bookings/create">Создать бронь</NavLink>
+            </RoleGuard>
+          </nav>
+        )}
 
         <div className="app-auth">
           {isAuthenticated && user ? (
             <>
-              <span className="app-user">
-                {user.login} / {user.role}
+              <span className="app-user" title="Текущий пользователь и роль">
+                {user.login} · {user.role}
               </span>
 
               <button className="link-button" type="button" onClick={logout}>
