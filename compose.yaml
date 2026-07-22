@@ -1,0 +1,65 @@
+services:
+  booking-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: booking-api:latest
+    container_name: booking-api
+    volumes:
+      - booking_data:/app/data
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__SecretKey: ${JWT_SECRET_KEY}
+      ConnectionStrings__DefaultConnection: ${DB_CONNECTION}
+      AdminSettings__Login: ${ADMIN_LOGIN}
+      AdminSettings__Password: ${ADMIN_PASSWORD}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - booking_network
+
+  nginx:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    image: booking-web:latest
+    container_name: booking-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      booking-api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - booking_network
+
+volumes:
+  booking_data:
+
+networks:
+  booking_network:

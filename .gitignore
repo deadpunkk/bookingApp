@@ -1,0 +1,21 @@
+# Environment / secrets
+.env
+.env.*
+.nginx.conf
+
+# SQLite local database
+*.db
+*.db-shm
+*.db-wal
+
+# Build output
+bin/
+obj/
+
+# Rider / user settings
+*.DotSettings.user
+*.user
+.idea/
+
+# macOS
+.DS_Store
